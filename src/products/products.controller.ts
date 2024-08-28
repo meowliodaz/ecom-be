@@ -1,10 +1,18 @@
 import {
 	Body,
-	Controller, Delete, Get, Param, Patch, Post
+	Controller, Delete, Get, Param, Patch, Post,
+	Query,
+	ParseIntPipe,
+	ValidationPipe
 } from '@nestjs/common';
+import { ProductsService } from './products.service';
+import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 
 @Controller('products')
 export class ProductsController {
+
+	constructor(private readonly productsService: ProductsService) {}
+
 	/*
 	REMEMBER: Route order is important
 	GET		/products
@@ -16,32 +24,39 @@ export class ProductsController {
 	*/
 
 	@Get()		// GET /products
-	findManyProducts() {
+	findManyProducts(@Query("format") format?: "pdf" | "epub") {
+		const products = this.productsService.findManyProducts(format);
 
-		return [];
+		return products;
 	}
 	
 	@Get(":id")	//Get products/:id
-	findProduct(@Param("id") id:string) {
+	findProduct(@Param("id", ParseIntPipe) id: number) {
+		const product = this.productsService.findProduct(id);
 
-		return {};
+		return product;
 	}
 	
 	@Post("")	//POST products
-	createProduct(@Body() product: {}) {
+	createProduct(
+		@Body(ValidationPipe) product: CreateProductDto
+	) {
 
-		return {};
+		return this.productsService.createProduct(product);
 	}
 
 	@Patch("id")	//PATCH products/:id
-	updateProduct(@Param("id") id: string, @Body() productUpdate: {}) {
+	updateProduct(
+		@Param("id", ParseIntPipe) id: number,
+		@Body(ValidationPipe) productUpdate: UpdateProductDto
+	) {
 
-		return productUpdate;
+		return this.productsService.updateProduct(id, productUpdate);
 	}
 	
 	@Delete(":id")	//Get products/:id
-	deleteProduct(@Param("id") id:string) {
+	deleteProduct(@Param("id", ParseIntPipe) id: number) {
 
-		return {};
+		return this.productsService.deleteProduct(id);
 	}
 }
