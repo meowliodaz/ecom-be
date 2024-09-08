@@ -5,10 +5,86 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+	provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+	provider	= "mysql"
+	url			= env("DATABASE_URL")
+	// directUrl	= env("DIRECT_URL")
+}
+
+model Product {
+	id          Int      @id @default(autoincrement())
+	name        String   @unique
+	author      String
+	publisher   String
+	description String?
+	format      Format
+	price       Float
+	salePrice   Float?
+	stocks      Int      @default(-1)
+	image       String?
+	createdAt   DateTime @default(now())
+	updatedAt   DateTime @updatedAt
+
+	product_category Product_Category[]
+	order_item       Order_Item[]
+}
+
+enum Format {
+	pdf
+	epub
+}
+
+model Product_Category {
+	id          Int @id @default(autoincrement())
+	product_id  Int
+	category_id Int
+
+	product  Product  @relation(fields: [product_id], references: [id])
+	category Category @relation(fields: [category_id], references: [id])
+}
+
+model Category {
+	id          Int      @id @default(autoincrement())
+	name        String   @unique
+	description String?  @db.LongText
+	createdAt   DateTime @default(now())
+	updatedAt   DateTime @updatedAt
+
+	product_category Product_Category[]
+	category_parent  Category_hierarchy[] @relation("parent")
+	category_child   Category_hierarchy[] @relation("child")
+}
+
+model Category_hierarchy {
+	id        Int @id @default(autoincrement())
+	parent_id Int
+	child_id  Int
+
+	parent_category Category @relation(fields: [parent_id], references: [id], name: "parent")
+	child_category  Category @relation(fields: [child_id], references: [id], name: "child")
+}
+
+model Order {
+	id             Int      @id @default(autoincrement())
+	customer_email String
+	customer_phone String
+	customer_name  String?
+	total          Float
+	item_count     Int
+	items          String
+	createdAt      DateTime @default(now())
+	updatedAt      DateTime @updatedAt
+}
+
+model Order_Item {
+	id          Int   @id @default(autoincrement())
+	product_id  Int
+	item_count  Int
+	unit_price  Float
+	total_price Float
+
+	product Product @relation(fields: [product_id], references: [id])
 }
